@@ -6,10 +6,57 @@ GridWatch is a real-time monitoring platform designed to ingest high-frequency s
 
 The system focuses on:
 
-* Reliable ingestion of sensor data
-* Real-time anomaly detection
-* Alert lifecycle management
-* Push-based real-time updates (no polling)
+* Reliable ingestion of sensor data  
+* Real-time anomaly detection  
+* Alert lifecycle management  
+* Push-based real-time updates (no polling)  
+
+---
+
+## 🐳 Run with Docker (Recommended)
+
+This project is fully containerized and can be started with a single command.
+
+### 1. Clone the repository
+
+git clone <repo-url>
+cd GridWatch
+
+### 2. Configure environment variables
+
+Create `.env` file inside:
+
+backend/.env
+
+Example:
+
+DB_HOST=your-aiven-host  
+DB_PORT=22218  
+DB_USER=avnadmin  
+DB_PASSWORD=your-password  
+DB_NAME=defaultdb  
+PORT=5000  
+
+---
+
+### 3. Run the application
+
+docker-compose up --build
+
+---
+
+### 4. Access the application
+
+Frontend: http://localhost:5173  
+Backend: http://localhost:5000  
+
+---
+
+### 🧠 Notes
+
+- Backend connects to Aiven PostgreSQL (cloud DB)  
+- Ensure your IP is whitelisted in Aiven dashboard  
+- SSL is enabled in backend configuration  
 
 ---
 
@@ -17,14 +64,12 @@ The system focuses on:
 
 ### Data Flow
 
-```
-Client → POST /ingest
-       → Store in PostgreSQL
-       → Anomaly Detection (Rule A)
-       → Alert Creation
-       → WebSocket Event Emitted
-       → Frontend Updates in Real-Time
-```
+Client → POST /ingest  
+       → Store in PostgreSQL  
+       → Anomaly Detection (Rule A)  
+       → Alert Creation  
+       → WebSocket Event Emitted  
+       → Frontend Updates in Real-Time  
 
 ---
 
@@ -32,16 +77,16 @@ Client → POST /ingest
 
 ### Backend
 
-* Node.js + TypeScript
-* Express
-* PostgreSQL
-* Socket.io
+* Node.js + TypeScript  
+* Express  
+* PostgreSQL  
+* Socket.io  
 
 ### Frontend
 
-* React (Vite)
-* Axios
-* Socket.io-client
+* React (Vite)  
+* Axios  
+* Socket.io-client  
 
 ---
 
@@ -49,107 +94,72 @@ Client → POST /ingest
 
 ### ✅ Ingestion Pipeline
 
-* Accepts batch sensor readings
-* Stores data in PostgreSQL
-* Ensures durability before response
+* Accepts batch sensor readings  
+* Stores data in PostgreSQL  
+* Ensures durability before response  
 
 ---
 
 ### ✅ Anomaly Detection (Rule A)
 
-* Threshold-based detection:
-
-  * Temperature > 50 → anomaly
-* Triggers alert creation
+* Threshold-based detection:  
+  Temperature > 50 → anomaly  
+* Triggers alert creation  
 
 ---
 
 ### ✅ Alert Management
 
-* Lifecycle:
-
-  * `open → acknowledged → resolved`
-* API to update alert status
-* Audit logging for every transition
+* Lifecycle: open → acknowledged → resolved  
+* API to update alert status  
+* Audit logging for every transition  
 
 ---
 
 ### ✅ Audit Logging
 
-* Append-only logs stored in `alert_logs`
-* Tracks:
-
-  * from_status
-  * to_status
-  * timestamp
+* Append-only logs stored in `alert_logs`  
+* Tracks: from_status, to_status, timestamp  
 
 ---
 
 ### ✅ Real-Time Updates (Core Feature)
 
-* Implemented using WebSockets (Socket.io)
-* Events:
-
-  * `new-alert`
-  * `alert-updated`
-* Frontend updates instantly without polling
+* Implemented using WebSockets (Socket.io)  
+* Events: `new-alert`, `alert-updated`  
+* Frontend updates instantly without polling  
 
 ---
 
 ### ✅ Historical Query API
 
-* Endpoint:
+GET /sensors/:id/history?from=...&to=...
 
-  ```
-  GET /sensors/:id/history?from=...&to=...
-  ```
-* Returns:
-
-  * Sensor readings
-  * Derived anomaly flag per reading
-* Optimized using indexing
+* Returns sensor readings + anomaly flag  
+* Optimized using indexing  
 
 ---
 
 ### ✅ Auto Escalation (Basic Implementation)
 
-* Alerts are escalated if not acknowledged within a time window
-* Implemented using `setTimeout` for simplicity
+* Alerts escalated if not acknowledged  
+* Implemented using `setTimeout`  
 
 ---
 
 ### ✅ Database Indexing
 
-* Index on `(sensor_id, timestamp)` for fast time-range queries
-* Index on `alerts.status` for efficient filtering
+* Index on `(sensor_id, timestamp)`  
+* Index on `alerts.status`  
 
 ---
 
 ## 🧪 API Endpoints
 
-### 🔹 Ingest Data
-
-```
-POST /ingest
-```
-
-### 🔹 Get Alerts
-
-```
-GET /alerts
-```
-
-### 🔹 Update Alert
-
-```
-PATCH /alerts/:id
-```
-
-### 🔹 Sensor History
-
-```
-GET /sensors/:id/history
-```
+POST /ingest  
+GET /alerts  
+PATCH /alerts/:id  
+GET /sensors/:id/history  
 
 ---
 
@@ -157,92 +167,80 @@ GET /sensors/:id/history
 
 ### Tables
 
-* `readings` — stores sensor data
-* `alerts` — stores alerts
-* `alert_logs` — audit trail
+* readings  
+* alerts  
+* alert_logs  
 
 ### Design Decisions
 
-* UUID-based identifiers for scalability
-* Separation of alerts and logs for audit integrity
-* Composite indexing for performance
+* UUID-based identifiers  
+* Separate audit logs for integrity  
+* Composite indexing for performance  
 
 ---
 
 ## ⚡ Real-Time Design
 
-* Used Socket.io for push-based updates
-* Backend emits events on:
-
-  * alert creation
-  * alert updates
-* Frontend subscribes and updates UI instantly
-* Avoids polling → reduces latency and load
+* Socket.io for push updates  
+* Backend emits events on alert creation/update  
+* Frontend subscribes → no polling  
 
 ---
 
 ## ⚖️ Trade-offs & Simplifications
 
-Due to time constraints:
-
-* Only Rule A implemented (threshold-based)
-* Ingestion pipeline is synchronous (no queue)
-* Escalation implemented using `setTimeout` (not persistent)
-* No zone-based access control
-* No suppression feature
+* Only Rule A implemented  
+* Synchronous ingestion (no queue)  
+* setTimeout for escalation  
+* No zone-based access control  
+* No suppression feature  
 
 ---
 
-## ❗ What I Did Not Implement
+## ❗ Not Implemented
 
-* Rule B — Rate-of-change anomaly detection
-* Rule C — Pattern absence detection
-* Zone-based access control (data-level isolation)
-* Suppression API for alerts
-* Fully async ingestion pipeline
-* Escalation logging and supervisor assignment
-* Pagination for history API
+* Rule B (rate-of-change)  
+* Rule C (pattern absence)  
+* Zone-based access control  
+* Suppression API  
+* Async ingestion pipeline  
+* Escalation logs + supervisor  
+* Pagination  
 
 ---
 
 ## 🚀 Production Improvements
 
-If given more time:
-
-* Use BullMQ / Redis for async ingestion and processing
-* Implement Rule B and Rule C with background workers
-* Add escalation_log table and supervisor assignment
-* Implement row-level security for zone isolation
-* Add caching layer for high-frequency queries
-* Improve query performance with advanced indexing strategies
+* Use BullMQ / Redis  
+* Implement Rule B & C  
+* Add escalation_log table  
+* Row-level security  
+* Caching layer  
+* Advanced indexing  
 
 ---
 
 ## 🧠 Key Challenges
 
-1. Designing a real-time system without polling
-2. Maintaining alert lifecycle consistency with audit logs
-3. Balancing performance and simplicity under time constraints
+1. Real-time system without polling  
+2. Alert lifecycle consistency  
+3. Performance vs simplicity  
 
 ---
 
-## ▶️ Setup Instructions
+## ▶️ Local Development (Without Docker)
 
 ### Backend
 
-```
-cd backend
-npm install
-npm run dev
-```
+cd backend  
+npm install  
+npm run dev  
 
 ### Frontend
 
-```
-cd frontend
-npm install
-npm run dev
-```
+cd frontend  
+npm install  
+npm run dev  
 
 ---
 
@@ -250,10 +248,10 @@ npm run dev
 
 This project demonstrates:
 
-* Real-time system design using WebSockets
-* Backend architecture for ingestion and alerting
-* Database modeling and indexing strategies
-* Ability to prioritize core functionality under constraints
+* Real-time system design  
+* Backend architecture for ingestion  
+* Database modeling & indexing  
+* Prioritization under constraints  
 
 ---
 
