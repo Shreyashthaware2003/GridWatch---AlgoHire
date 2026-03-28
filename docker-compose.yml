@@ -1,0 +1,25 @@
+services:
+  backend:
+    build: ./backend
+    container_name: backend-container
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./backend/.env
+    networks:
+      - gridwatch-network
+
+  frontend:
+    build: ./frontend
+    container_name: frontend-container
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:5000
+    depends_on:
+      - backend
+    networks:
+      - gridwatch-network
+
+networks:
+  gridwatch-network:
